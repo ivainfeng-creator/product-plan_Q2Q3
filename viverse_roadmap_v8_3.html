@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIVERSE Roadmap · 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --y:#F4D03F;--yl:#FFFBE8;--yb:#E8C200;
+  --k:#0F0F0F;--g:#5A5A5A;--g2:#A0A0A0;--g3:#D4D4D4;
+  --bg:#FFFFFF;--bg2:#F6F6F4;--bg3:#EFEFED;
+}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--k);}
+
+/* ── PROGRESS BAR ── */
+.pbar{position:fixed;top:0;left:0;height:3px;background:var(--y);transition:width .35s cubic-bezier(.4,0,.2,1);z-index:300;}
+
+/* ── DECK ── */
+.deck{width:100vw;height:100vh;position:relative;overflow:hidden;}
+
+/* ── SLIDE ── */
+.slide{
+  position:absolute;inset:0;
+  display:grid;grid-template-rows:56px 1fr 64px;
+  opacity:0;pointer-events:none;
+  will-change:transform,opacity;
+}
+.slide.active{opacity:1;pointer-events:all;}
+.slide.enter-right{animation:enterRight .38s cubic-bezier(.4,0,.2,1) forwards;}
+.slide.enter-left{animation:enterLeft .38s cubic-bezier(.4,0,.2,1) forwards;}
+.slide.exit-right{animation:exitRight .38s cubic-bezier(.4,0,.2,1) forwards;}
+.slide.exit-left{animation:exitLeft .38s cubic-bezier(.4,0,.2,1) forwards;}
+
+@keyframes enterRight{from{opacity:0;transform:translateX(48px)}to{opacity:1;transform:translateX(0)}}
+@keyframes enterLeft{from{opacity:0;transform:translateX(-48px)}to{opacity:1;transform:translateX(0)}}
+@keyframes exitRight{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(-48px)}}
+@keyframes exitLeft{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(48px)}}
+
+/* staggered child animations — only triggered by JS .playing class, not .active */
+.slide.playing .anim{animation:fadeUp .45s cubic-bezier(.4,0,.2,1) forwards;}
+.slide.playing .anim:nth-child(1){animation-delay:.05s}
+.slide.playing .anim:nth-child(2){animation-delay:.1s}
+.slide.playing .anim:nth-child(3){animation-delay:.15s}
+.slide.playing .anim:nth-child(4){animation-delay:.2s}
+.slide.playing .anim:nth-child(5){animation-delay:.25s}
+.slide.playing .anim:nth-child(6){animation-delay:.3s}
+/* always visible when active — no flicker on revisit */
+.slide.active .anim{opacity:1;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── TOP BAR ── */
+.tb{display:flex;align-items:center;justify-content:space-between;padding:0 48px;border-bottom:1px solid var(--g3);flex-shrink:0;}
+.brand{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--g2);font-family:'DM Mono',monospace;}
+.vpill{font-size:11px;font-weight:700;font-family:'DM Mono',monospace;padding:4px 14px;border-radius:20px;background:var(--y);color:var(--k);letter-spacing:.3px;}
+
+/* ── SLIDE BODY ── */
+.bd{padding:28px 48px 16px;overflow:hidden;display:flex;flex-direction:column;}
+
+/* ── SLIDE TITLE ── */
+.slide-title{font-size:42px;font-weight:800;line-height:1.05;letter-spacing:-1.2px;color:var(--k);margin-bottom:6px;}
+.slide-title span{color:var(--g2);font-weight:300;}
+.slide-title em{font-style:normal;background:var(--y);padding:0 6px;border-radius:4px;}
+.slide-eyebrow{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--g2);font-family:'DM Mono',monospace;margin-bottom:10px;}
+
+/* ── SECTION LABEL ── */
+.slbl{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;font-family:'DM Mono',monospace;color:var(--g2);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.slbl::after{content:'';flex:1;height:1px;background:var(--g3);}
+
+/* ── TWO COL ── */
+.two{display:grid;grid-template-columns:1fr 1.7fr;gap:16px;flex:1;min-height:0;}
+.col{display:flex;flex-direction:column;gap:0;}
+
+/* ── WHY BLOCK ── */
+.why{background:var(--yl);border:1.5px solid var(--y);border-radius:14px;padding:20px 22px;flex:1;display:flex;flex-direction:column;gap:12px;}
+.why-hdg{font-size:13px;font-weight:700;color:var(--k);margin-bottom:2px;}
+.why-body{font-size:14px;color:#3a3a3a;line-height:1.7;}
+.why-pts{display:flex;flex-direction:column;gap:8px;}
+.why-pt{display:flex;align-items:flex-start;gap:8px;font-size:13.5px;color:var(--k);line-height:1.5;font-weight:500;}
+.why-pt .d{flex-shrink:0;margin-top:1px;}
+
+/* ── WHAT LIST ── */
+.what{display:flex;flex-direction:column;gap:7px;flex:1;overflow-y:auto;padding-right:2px;}
+.what::-webkit-scrollbar{width:3px;}
+.what::-webkit-scrollbar-thumb{background:var(--g3);border-radius:2px;}
+
+.wi{background:var(--bg);border:1.5px solid var(--g3);border-radius:10px;padding:12px 15px;display:flex;align-items:flex-start;gap:11px;transition:border-color .15s,box-shadow .15s;}
+.wi:hover{border-color:var(--g2);box-shadow:0 2px 12px rgba(0,0,0,.06);}
+.wi.hi{border-color:var(--yb);background:var(--yl);}
+.wi-ico{width:20px;height:20px;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;}
+.wi-ti{font-size:14px;font-weight:700;color:var(--k);margin-bottom:3px;line-height:1.3;}
+.wi-de{font-size:12px;color:var(--g);line-height:1.55;}
+.tags{display:flex;gap:4px;margin-top:5px;flex-wrap:wrap;}
+.tag{font-size:10px;font-family:'DM Mono',monospace;font-weight:500;padding:2px 8px;border-radius:4px;border:1px solid var(--g3);color:var(--g);background:var(--bg2);}
+.tag.y{background:var(--y);color:var(--k);border-color:var(--y);}
+.tag.k{background:var(--k);color:#fff;border-color:var(--k);}
+.tag.r{background:#FEE2E2;color:#991B1B;border-color:#FECACA;}
+
+/* ── NOTES ── */
+.notes{padding:0 48px 0;height:64px;border-top:1px solid var(--g3);display:flex;align-items:center;gap:12px;flex-shrink:0;}
+.nlbl{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;font-family:'DM Mono',monospace;color:var(--y);background:var(--k);padding:3px 9px;border-radius:4px;white-space:nowrap;flex-shrink:0;}
+.nt{font-size:12px;color:var(--g);line-height:1.55;}
+
+/* ── BOTTOM NAV ── */
+.nav{position:fixed;bottom:0;left:0;right:0;z-index:200;height:48px;background:var(--k);display:flex;align-items:center;justify-content:space-between;padding:0 48px;gap:12px;}
+.ntabs{display:flex;gap:1px;overflow-x:auto;flex:1;}
+.ntabs::-webkit-scrollbar{display:none;}
+.ntab{padding:5px 10px;border-radius:5px;font-size:10.5px;font-weight:500;color:#666;cursor:pointer;border:none;background:none;white-space:nowrap;transition:all .15s;font-family:'DM Sans',sans-serif;}
+.ntab:hover{color:#bbb;}
+.ntab.active{background:var(--y);color:var(--k);font-weight:700;}
+.nright{display:flex;align-items:center;gap:7px;flex-shrink:0;}
+.nctr{font-size:11px;color:#555;font-family:'DM Mono',monospace;min-width:40px;text-align:center;}
+.abtn{width:28px;height:28px;border-radius:6px;border:1px solid #333;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;color:#777;}
+.abtn:hover{border-color:#666;color:#ddd;}
+.abtn:disabled{opacity:.2;cursor:default;}
+.abtn svg{width:12px;height:12px;}
+.kbd{font-size:10px;color:#444;font-family:'DM Mono',monospace;}
+
+/* ═══════════════════════════════════
+   COVER
+═══════════════════════════════════ */
+.cvr-body{padding:0 48px;display:flex;align-items:center;flex:1;gap:48px;}
+.cvr-l{flex:1;}
+.cvr-r{width:300px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.cvr-title{font-size:68px;font-weight:800;line-height:.98;letter-spacing:-2.5px;color:var(--k);margin-bottom:10px;}
+.cvr-title em{font-style:normal;display:inline-block;background:var(--y);padding:2px 10px;border-radius:6px;}
+.cvr-div{width:48px;height:4px;background:var(--y);border-radius:2px;margin:20px 0;}
+.cvr-sub{font-size:16px;font-weight:400;color:var(--g);margin-bottom:32px;max-width:440px;line-height:1.7;}
+.cvr-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;max-width:500px;}
+.cs{background:var(--bg2);border:1.5px solid var(--g3);border-radius:10px;padding:14px 16px;}
+.cs.y{background:var(--y);border-color:var(--y);}
+.cs-val{font-size:28px;font-weight:800;font-family:'DM Mono',monospace;color:var(--k);line-height:1;margin-bottom:4px;}
+.cs-lbl{font-size:11px;color:var(--g);line-height:1.3;}
+.cs.y .cs-lbl{color:#555;}
+
+/* ═══════════════════════════════════
+   OVERVIEW
+═══════════════════════════════════ */
+.ov-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;flex-shrink:0;}
+.os{background:var(--bg2);border:1.5px solid var(--g3);border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:12px;}
+.os.y{background:var(--y);border-color:var(--y);}
+.os-ico{width:32px;height:32px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.os-val{font-size:22px;font-weight:800;font-family:'DM Mono',monospace;line-height:1;margin-bottom:3px;}
+.os-lbl{font-size:11px;color:var(--g);line-height:1.3;}
+.os.y .os-lbl{color:#555;}
+
+.phase-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;flex:1;}
+.pc{border:1.5px solid var(--g3);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:5px;transition:border-color .15s;}
+.pc:hover{border-color:var(--g2);}
+.pc.now{border-color:var(--yb);border-width:2px;background:var(--yl);}
+.pc-tag{font-size:10px;font-weight:700;font-family:'DM Mono',monospace;padding:3px 9px;border-radius:4px;background:var(--y);color:var(--k);display:inline-block;margin-bottom:4px;}
+.pc-tag.dk{background:var(--k);color:var(--y);}
+.pc-tag.gr{background:var(--bg3);color:var(--g2);}
+.pc-name{font-size:17px;font-weight:800;color:var(--k);line-height:1.15;margin-bottom:2px;}
+.pc-theme{font-size:12px;color:var(--g);font-style:italic;margin-bottom:4px;}
+.pc-date{font-size:11px;font-family:'DM Mono',monospace;color:var(--g2);margin-bottom:4px;}
+.pc-li{font-size:12px;color:#333;display:flex;align-items:flex-start;gap:5px;line-height:1.45;margin-bottom:3px;}
+.pc-li::before{content:'🟡';font-size:9px;margin-top:2px;flex-shrink:0;}
+
+/* ═══════════════════════════════════
+   STRATEGY
+═══════════════════════════════════ */
+.str-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;flex:1;min-height:0;}
+.kpi-list{display:flex;flex-direction:column;gap:8px;}
+.kpi{background:var(--bg2);border:1.5px solid var(--g3);border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:14px;}
+.kpi.y{background:var(--y);border-color:var(--y);}
+.kpi-ico{width:32px;height:32px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.kpi-val{font-size:22px;font-weight:800;font-family:'DM Mono',monospace;min-width:76px;line-height:1;}
+.kpi-lbl{font-size:13px;color:var(--g);line-height:1.4;}
+.kpi.y .kpi-lbl{color:#555;}
+.init-list{display:flex;flex-direction:column;overflow-y:auto;flex:1;}
+.ir{display:flex;align-items:flex-start;gap:11px;padding:10px 0;border-bottom:1px solid var(--g3);}
+.ir:last-child{border-bottom:none;}
+.ib{width:24px;height:24px;border-radius:6px;font-size:11px;font-weight:700;font-family:'DM Mono',monospace;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.ip1{background:var(--y);color:var(--k);}
+.ip2{background:var(--k);color:var(--y);}
+.ip3{background:var(--bg3);color:var(--g2);border:1px solid var(--g3);}
+.ir-ti{font-size:14px;font-weight:700;color:var(--k);margin-bottom:2px;}
+.ir-de{font-size:12px;color:var(--g);line-height:1.45;}
+
+/* ═══════════════════════════════════
+   TIMELINE
+═══════════════════════════════════ */
+.tl{flex:1;display:flex;flex-direction:column;gap:10px;overflow-y:auto;padding-right:4px;}
+.tl::-webkit-scrollbar{width:3px;}
+.tl::-webkit-scrollbar-thumb{background:var(--g3);border-radius:2px;}
+.tl-row{display:flex;align-items:stretch;gap:0;}
+.tl-ver{display:flex;flex-direction:column;align-items:center;width:44px;flex-shrink:0;}
+.tl-dot{width:14px;height:14px;border-radius:50%;background:var(--y);border:2.5px solid var(--k);flex-shrink:0;z-index:1;}
+.tl-dot.dim{background:var(--g3);border-color:var(--g2);}
+.tl-line{width:2px;background:var(--g3);flex:1;margin:3px 0;}
+.tl-card{flex:1;background:var(--bg2);border:1.5px solid var(--g3);border-radius:11px;padding:14px 18px;margin-bottom:8px;transition:border-color .15s;}
+.tl-card:hover{border-color:var(--g2);}
+.tl-card.now{border-color:var(--yb);border-width:2px;background:var(--yl);}
+.tl-head{display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap;}
+.tl-vtag{font-size:11px;font-weight:700;font-family:'DM Mono',monospace;padding:3px 10px;border-radius:4px;background:var(--y);color:var(--k);}
+.tl-vtag.fut{background:var(--bg);color:var(--g2);border:1px solid var(--g3);}
+.tl-vname{font-size:16px;font-weight:800;color:var(--k);}
+.tl-theme{font-size:12px;font-style:italic;color:var(--g);margin-left:auto;}
+.tl-desc{font-size:12.5px;color:var(--g);line-height:1.6;margin-bottom:8px;}
+.tl-pills{display:flex;gap:5px;flex-wrap:wrap;}
+.tl-p{font-size:10px;font-family:'DM Mono',monospace;padding:2px 8px;border-radius:4px;border:1px solid var(--g3);color:var(--g);}
+.tl-p.y{background:var(--y);color:var(--k);border-color:var(--y);}
+.tl-p.k{background:var(--k);color:#fff;border-color:var(--k);}
+
+/* ═══════════════════════════════════
+   DETAIL SLIDES (Campaign / Widget)
+═══════════════════════════════════ */
+.detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;flex:1;min-height:0;}
+.dc{background:var(--bg2);border:1.5px solid var(--g3);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:8px;transition:border-color .15s;}
+.dc:hover{border-color:var(--g2);}
+.dc.hi{border-color:var(--yb);background:var(--yl);}
+.dc-ico{width:36px;height:36px;background:var(--y);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-bottom:2px;}
+.dc-ico.dk{background:var(--k);}
+.dc-ti{font-size:16px;font-weight:800;color:var(--k);line-height:1.2;}
+.dc-de{font-size:12.5px;color:var(--g);line-height:1.6;flex:1;}
+.dc-pts{display:flex;flex-direction:column;gap:5px;margin-top:4px;}
+.dc-pt{font-size:12px;color:var(--k);display:flex;align-items:flex-start;gap:6px;line-height:1.4;font-weight:500;}
+.dc-pt .d{flex-shrink:0;}
+
+/* risk banner */
+.rbox{background:#FEF3E2;border:1.5px solid #F5C842;border-radius:8px;padding:9px 14px;font-size:12px;color:#333;line-height:1.5;flex-shrink:0;margin-bottom:12px;}
+.rbox strong{color:var(--k);}
+
+/* version header for detail slides */
+.ver-header{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-shrink:0;}
+.ver-badge{font-size:24px;font-weight:800;font-family:'DM Mono',monospace;color:var(--k);}
+.ver-name{font-size:30px;font-weight:800;color:var(--k);line-height:1.1;letter-spacing:-.8px;}
+.ver-name span{color:var(--g);font-weight:300;}
+.ver-theme{font-size:13px;font-style:italic;color:var(--g);border-left:3px solid var(--y);padding-left:10px;line-height:1.5;}
+
+</style>
+</head>
+<body>
+<div class="pbar" id="pbar" style="width:0%"></div>
+<div class="deck" id="deck">
+
+<!-- ══════════════════════════
+  0 · COVER
+══════════════════════════ -->
+<div class="slide active" data-idx="0">
+  <div class="tb"><div class="brand">VIVERSE · Product</div><div class="vpill">2026 Roadmap</div></div>
+  <div class="cvr-body">
+    <div class="cvr-l">
+      <div class="slide-eyebrow anim">Product Roadmap · H1–H2 2026 · V1.2 Apr → V1.7 Oct</div>
+      <div class="cvr-title anim">From<br><em>Traffic</em><br>to Stickiness</div>
+      <div class="cvr-div anim"></div>
+      <div class="cvr-sub anim">Campaign first. Habit second. Monetize last.<br>Build the right foundation in the right order.</div>
+      <div class="cvr-stats anim">
+        <div class="cs"><div class="cs-val">1.1M</div><div class="cs-lbl">Current MAU</div></div>
+        <div class="cs y"><div class="cs-val">5M</div><div class="cs-lbl">MAU target</div></div>
+        <div class="cs"><div class="cs-val">30%</div><div class="cs-lbl">Return user target</div></div>
+        <div class="cs"><div class="cs-val">18–40</div><div class="cs-lbl">Primary TA · US</div></div>
+      </div>
+    </div>
+    <div class="cvr-r anim">
+      <svg width="280" height="280" viewBox="0 0 280 280" fill="none">
+        <circle cx="140" cy="140" r="128" fill="#FFFBE8" stroke="#F4D03F" stroke-width="1.5"/>
+        <rect x="82" y="46" width="116" height="188" rx="18" fill="white" stroke="#111" stroke-width="2.5"/>
+        <rect x="89" y="60" width="102" height="158" rx="10" fill="#F6F6F4"/>
+        <rect x="114" y="49" width="52" height="12" rx="6" fill="#111"/>
+        <rect x="100" y="160" width="16" height="42" rx="3" fill="#E8E6E2"/>
+        <rect x="122" y="136" width="16" height="66" rx="3" fill="#F4D03F"/>
+        <rect x="144" y="108" width="16" height="94" rx="3" fill="#F4D03F"/>
+        <rect x="166" y="82" width="16" height="120" rx="3" fill="#111"/>
+        <text x="140" y="100" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="10" font-weight="800" fill="#111">↑ 1.1M → 5M</text>
+        <path d="M170 44 L188 20 L206 44" stroke="#F4D03F" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <line x1="188" y1="20" x2="188" y2="48" stroke="#F4D03F" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="58" cy="86" r="6" fill="#F4D03F"/>
+        <circle cx="46" cy="112" r="4" fill="#F4D03F" opacity=".4"/>
+        <circle cx="218" cy="178" r="5" fill="#111"/>
+        <circle cx="232" cy="160" r="3" fill="#111" opacity=".3"/>
+        <rect x="116" y="232" width="48" height="5" rx="2.5" fill="#E8E6E2"/>
+        <circle cx="180" cy="66" r="12" fill="#F4D03F" stroke="white" stroke-width="2.5"/>
+        <text x="180" y="70" text-anchor="middle" font-family="DM Mono,monospace" font-size="10" font-weight="700" fill="#111">30%</text>
+      </svg>
+    </div>
+  </div>
+  <div class="notes"><div class="nlbl">Notes</div><div class="nt">We have 1.1M MAU, but habit hasn't formed yet. The strategy is sequenced: Campaign validates behavior → Mission builds permanent habit → UGC creates organic growth → IAP monetizes on top. Don't skip steps.</div></div>
+</div>
+
+<!-- ══════════════════════════
+  1 · OVERVIEW
+══════════════════════════ -->
+<div class="slide" data-idx="1">
+  <div class="tb"><div class="brand">VIVERSE · Overview</div><div class="vpill">The Plan</div></div>
+  <div class="bd">
+    <div class="slide-eyebrow anim">Why this order matters</div>
+    <div class="slide-title anim">Overview <span>— sequenced for a reason</span></div>
+    <div class="ov-stats anim">
+      <div class="os y">
+        <div class="os-ico"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M4 20L9 13L14 16L22 6" stroke="#111" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 6h3v3" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div><div class="os-val">1.1M→5M</div><div class="os-lbl">MAU target</div></div>
+      </div>
+      <div class="os">
+        <div class="os-ico"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 4l2.8 5.6L23 11l-4.5 4.4L19.6 22 14 19.1 8.4 22l1.1-6.6L5 11l6.2-.9L14 4z" fill="#F4D03F" stroke="#111" stroke-width="1.5" stroke-linejoin="round"/></svg></div>
+        <div><div class="os-val">30%</div><div class="os-lbl">Return user target</div></div>
+      </div>
+      <div class="os">
+        <div class="os-ico"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="4" y="5" width="20" height="18" rx="3" stroke="#999" stroke-width="1.5"/><path d="M4 11h20" stroke="#F4D03F" stroke-width="1.5"/><rect x="8" y="16" width="5" height="4" rx="1" fill="#F4D03F"/><rect x="15" y="14" width="5" height="6" rx="1" fill="#111"/></svg></div>
+        <div><div class="os-val">6 versions</div><div class="os-lbl">V1.2 → V1.7 · Monthly</div></div>
+      </div>
+      <div class="os">
+        <div class="os-ico"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="10" stroke="#999" stroke-width="1.5"/><path d="M10 14l3 3 5-5" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div><div class="os-val">Campaign first</div><div class="os-lbl">Validate before scaling</div></div>
+      </div>
+    </div>
+    <div class="phase-row anim">
+      <div class="pc now">
+        <span class="pc-tag">Phase A · V1.2–V1.4</span>
+        <div class="pc-name">Campaign Engine</div>
+        <div class="pc-theme">"Validate that tasks change behavior"</div>
+        <div class="pc-date">Apr – Jul 2026</div>
+        <div class="pc-li">V1.2: Campaign MVP — first closed loop</div>
+        <div class="pc-li">V1.3: Make campaign configurable/repeatable</div>
+        <div class="pc-li">V1.4: New user vs return user split</div>
+        <div class="pc-li">Output: BI data + campaign template</div>
+      </div>
+      <div class="pc">
+        <span class="pc-tag dk">Phase B · V1.5</span>
+        <div class="pc-name">Mission + UGC Foundation</div>
+        <div class="pc-theme">"Habit without big rewards"</div>
+        <div class="pc-date">Aug 2026</div>
+        <div class="pc-li">Always-on weekly missions (lightweight)</div>
+        <div class="pc-li">Object AI → publish to public</div>
+        <div class="pc-li">First UGC browse page live</div>
+        <div class="pc-li">Output: DAU habit signal</div>
+      </div>
+      <div class="pc">
+        <span class="pc-tag gr">Phase C · V1.6–V1.7</span>
+        <div class="pc-name">UGC Campaign + IAP</div>
+        <div class="pc-theme">"Organic growth + first revenue"</div>
+        <div class="pc-date">Sep – Oct 2026</div>
+        <div class="pc-li">V1.6: 3D Creation Challenge + voting</div>
+        <div class="pc-li">V1.6: IAP architecture foundation</div>
+        <div class="pc-li">V1.7: IAP live + video creation tools</div>
+        <div class="pc-li">Prerequisite: habit + UGC base exists</div>
+      </div>
+    </div>
+  </div>
+  <div class="notes"><div class="nlbl">Notes</div><div class="nt">The sequencing is deliberate. V1.3 can't be effective without V1.2 data. V1.5 Mission works because campaign has already trained user behavior. V1.7 IAP only converts because V1.5–V1.6 built the habit and trust.</div></div>
+</div>
+
+<!-- ══════════════════════════
+  2 · STRATEGY
+══════════════════════════ -->
+<div class="slide" data-idx="2">
+  <div class="tb"><div class="brand">VIVERSE · Strategy</div><div class="vpill">HQ · March 2026</div></div>
+  <div class="bd">
+    <div class="slide-eyebrow anim">Company direction</div>
+    <div class="slide-title anim">North Star &amp; <span>HQ Initiatives</span></div>
+    <div class="str-grid anim">
+      <div style="display:flex;flex-direction:column;min-height:0;">
+        <div class="slbl">North star metrics</div>
+        <div class="kpi-list">
+          <div class="kpi y">
+            <div class="kpi-ico"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M4 20L9 13L14 16L22 6" stroke="#111" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 6h3v3" stroke="#111" stroke-width="2" stroke-linecap="round"/></svg></div>
+            <div><div class="kpi-val">1.1→5M</div><div class="kpi-lbl">MAU — platform growth</div></div>
+          </div>
+          <div class="kpi y">
+            <div class="kpi-ico"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 3l2.6 5.3 5.9.9-4.3 4.2 1 5.8L14 16.2l-5.2 2.7 1-5.8-4.3-4.2 5.9-.9L14 3z" fill="#111" stroke="#111" stroke-width="1"/></svg></div>
+            <div><div class="kpi-val">30%</div><div class="kpi-lbl">Return user rate target</div></div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-ico"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="10" stroke="#999" stroke-width="1.5"/><path d="M14 9v5l3.5 2.5" stroke="#F4D03F" stroke-width="2" stroke-linecap="round"/></svg></div>
+            <div><div class="kpi-val">D7 / D30</div><div class="kpi-lbl">Retention rate — mission KPI</div></div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-ico"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="4" y="11" width="20" height="14" rx="3" stroke="#999" stroke-width="1.5"/><path d="M9 11V9a5 5 0 0110 0v2" stroke="#999" stroke-width="1.5"/><circle cx="14" cy="17" r="2.5" fill="#F4D03F"/></svg></div>
+            <div><div class="kpi-val">IAP ready</div><div class="kpi-lbl">Architecture by Oct 2026</div></div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;min-height:0;">
+        <div class="slbl">HQ initiatives — priority order</div>
+        <div class="init-list">
+          <div class="ir"><div class="ib ip1">A</div><div><div class="ir-ti">Rebuild surface strategy across devices</div><div class="ir-de">Mobile web = fast trial. App = retention + habit. Desktop = deep exploration. Each surface has a distinct role.</div></div></div>
+          <div class="ir"><div class="ib ip1">D</div><div><div class="ir-ti">Re-entry Widgets for retention</div><div class="ir-de">Mission reminder, continue play, daily challenge. One-tap home screen re-entry — reduces push dependency.</div></div></div>
+          <div class="ir"><div class="ib ip2">B</div><div><div class="ir-ti">Content clarity + routing / ranking logic</div><div class="ir-de">Games / Worlds / Videos should look and feel different. Device-fit ranking + personalized recommendations.</div></div></div>
+          <div class="ir"><div class="ib ip2">E</div><div><div class="ir-ti">Video-based interaction to support retention</div><div class="ir-de">Comments, emoji reactions, creator recognition, gameplay clips — interaction drives repeat visits.</div></div></div>
+          <div class="ir"><div class="ib ip2">F</div><div><div class="ir-ti">UGC participation loops</div><div class="ir-de">Creation, voting, rewards — turn one-time participation into repeat engagement for creators and viewers.</div></div></div>
+          <div class="ir"><div class="ib ip3">C</div><div><div class="ir-ti">Increase mobile-friendly game coverage</div><div class="ir-de">Touch-friendly, short sessions, daily engagement. Improve fit between mobile traffic and playable experience.</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="notes"><div class="nlbl">Notes</div><div class="nt">HQ confirms the shift from acquisition-led to retention-led growth. Initiatives A and D are most directly aligned with our roadmap. Every feature decision should be tested against: does this move MAU toward 5M or return rate toward 30%?</div></div>
+</div>
+
+<!-- ══════════════════════════
+  3 · TIMELINE
+══════════════════════════ -->
+<div class="slide" data-idx="3">
+  <div class="tb"><div class="brand">VIVERSE · Roadmap</div><div class="vpill">V1.2 → V1.7</div></div>
+  <div class="bd">
+    <div class="slide-eyebrow anim">Full timeline</div>
+    <div class="slide-title anim">Campaign <em>→</em> Mission <em>→</em> UGC <em>→</em> IAP</div>
+    <div class="tl anim">
+      <div class="tl-row"><div class="tl-ver"><div class="tl-dot"></div><div class="tl-line"></div></div><div class="tl-card now"><div class="tl-head"><div class="tl-vtag">V1.2 · Apr–May</div><div class="tl-vname">Campaign MVP</div><div class="tl-theme">"Launch the first loop"</div></div><div class="tl-desc">Fix core experience, launch first mission-based campaign, build BI. Validate: do tasks drive install, login, first engagement?</div><div class="tl-pills"><span class="tl-p y">Now</span><span class="tl-p">Experience fix</span><span class="tl-p">Campaign landing</span><span class="tl-p">Push</span><span class="tl-p k">BI tracking</span></div></div></div>
+      <div class="tl-row"><div class="tl-ver"><div class="tl-dot"></div><div class="tl-line"></div></div><div class="tl-card"><div class="tl-head"><div class="tl-vtag">V1.3 · Jun</div><div class="tl-vname">Campaign: Repeatable</div><div class="tl-theme">"Stop rebuilding every time"</div></div><div class="tl-desc">Based on V1.2 data: fix drop-off steps, make campaigns configurable. Ops can launch Campaign 2 without engineering.</div><div class="tl-pills"><span class="tl-p">Campaign template</span><span class="tl-p">Drop-off fix</span><span class="tl-p">Reward variants</span><span class="tl-p">Widget (campaign)</span></div></div></div>
+      <div class="tl-row"><div class="tl-ver"><div class="tl-dot"></div><div class="tl-line"></div></div><div class="tl-card"><div class="tl-head"><div class="tl-vtag">V1.4 · Jul</div><div class="tl-vname">Campaign: Segmented</div><div class="tl-theme">"Right campaign for right user"</div></div><div class="tl-desc">New user vs return user separate campaigns. Stamp / Explore mechanic. Tier rewards (complete more = more entries). Content discovery campaigns.</div><div class="tl-pills"><span class="tl-p">New vs return</span><span class="tl-p">Stamp / collect</span><span class="tl-p">Tier rewards</span><span class="tl-p">Content campaigns</span></div></div></div>
+      <div class="tl-row"><div class="tl-ver"><div class="tl-dot"></div><div class="tl-line"></div></div><div class="tl-card"><div class="tl-head"><div class="tl-vtag">V1.5 · Aug</div><div class="tl-vname">Mission (Lightweight) + UGC</div><div class="tl-theme">"Habit without big rewards"</div></div><div class="tl-desc">Always-on weekly missions — 3 tasks, no expiry penalty, small reward. Object AI assets go public. First UGC browse page.</div><div class="tl-pills"><span class="tl-p">Weekly mission</span><span class="tl-p">No-FOMO design</span><span class="tl-p">Publish 3D asset</span><span class="tl-p">UGC browse</span></div></div></div>
+      <div class="tl-row"><div class="tl-ver"><div class="tl-dot dim"></div><div class="tl-line"></div></div><div class="tl-card"><div class="tl-head"><div class="tl-vtag fut">V1.6 · Sep</div><div class="tl-vname">UGC Campaign + IAP Foundation</div><div class="tl-theme">"First organic growth loop"</div></div><div class="tl-desc">3D Creation Challenge: submit → vote → win. Object AI social share (IG / X / TikTok + deep link). IAP architecture: Points system, Profile placeholder.</div><div class="tl-pills"><span class="tl-p">UGC campaign</span><span class="tl-p">Voting</span><span class="tl-p">Social share</span><span class="tl-p">IAP arch</span></div></div></div>
+      <div class="tl-row"><div class="tl-ver"><div class="tl-dot dim"></div></div><div class="tl-card"><div class="tl-head"><div class="tl-vtag fut">V1.7 · Oct</div><div class="tl-vname">IAP Live + Video Creation</div><div class="tl-theme">"First revenue + viral content"</div></div><div class="tl-desc">IAP goes live: Points purchase / Premium unlock. Video clip tool: record gameplay → edit → upload. First video-based campaign / competition.</div><div class="tl-pills"><span class="tl-p">IAP launch</span><span class="tl-p">Points purchase</span><span class="tl-p">Video tool</span><span class="tl-p">Video campaign</span></div></div></div>
+    </div>
+  </div>
+  <div class="notes"><div class="nlbl">Notes</div><div class="nt">Each version is prerequisite for the next. Campaign data shapes Mission design. Mission habit enables UGC to stick. Established habit makes IAP convert. This is the sequence — don't reorder it.</div></div>
+</div>
+
+<!-- ══════════════════════════
+  4 · V1.2 PHASE 1
+══════════════════════════ -->
+<div class="slide" data-idx="4">
+  <div class="tb"><div class="brand">VIVERSE · V1.2</div><div class="vpill">Phase 1 · CC 4/15 · Released 4/22</div></div>
+  <div class="bd">
+    <div class="slide-eyebrow anim">V1.2 · Phase 1</div>
+    <div class="slide-title anim">Foundation &amp; <span>Core Experience Fix</span></div>
+    <div class="two anim">
+      <div class="col">
+        <div class="slbl">Why this phase</div>
+        <div class="why">
+          <div class="why-body">Users leave because the experience is <strong>broken</strong> — not because content is bad. No campaign or mission can fix a bad first impression.</div>
+          <div class="why-pts">
+            <div class="why-pt"><span class="d">🟡</span>Mobile web and App have visible UI conflicts on load.</div>
+            <div class="why-pt"><span class="d">🟡</span>Game loading is too slow — users leave before they start.</div>
+            <div class="why-pt"><span class="d">🟡</span>Users can't tell if VIVERSE is games, videos, or 3D.</div>
+            <div class="why-pt"><span class="d">🟡</span>A broken first impression kills every downstream metric.</div>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="slbl">What we're building</div>
+        <div class="what">
+          <div class="wi hi"><div class="wi-ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1" y="3" width="16" height="12" rx="2.5" stroke="#111" stroke-width="1.5"/><path d="M4 8h10M4 11h7" stroke="#F4D03F" stroke-width="1.5" stroke-linecap="round"/></svg></div><div><div class="wi-ti">Mission page revamp</div><div class="wi-de">New IA: campaign card, progress bar, category tabs (Beginner / Create / Explore / Social). Featured campaign at top.</div><div class="tags"><span class="tag y">P0</span><span class="tag">retention</span></div></div></div>
+          <div class="wi"><div class="wi-ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="3" width="14" height="12" rx="2" stroke="#999" stroke-width="1.5"/><rect x="5" y="6" width="8" height="6" rx="1" fill="#F4D03F"/><path d="M6 15h6" stroke="#999" stroke-width="1.5" stroke-linecap="round"/></svg></div><div><div class="wi-ti">Worlds embedded mode fix</div><div class="wi-de">Hide web top nav, fix bottom nav conflict, correct safe area. No more UI overlap in App container.</div><div class="tags"><span class="tag y">P0</span><span class="tag">experience</span></div></div></div>
+          <div class="wi"><div class="wi-ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7.5" stroke="#999" stroke-width="1.5"/><path d="M7 6.5l5 2.5-5 2.5V6.5Z" fill="#111"/></svg></div><div><div class="wi-ti">Video playback support</div><div class="wi-de">Webplayer embed, thumbnail + metadata, tap-to-play. No broken routing inside Worlds feed.</div><div class="tags"><span class="tag y">P0</span><span class="tag">experience</span></div></div></div>
+          <div class="wi"><div class="wi-ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1" y="5" width="16" height="10" rx="2" stroke="#999" stroke-width="1.5"/><circle cx="6" cy="10" r="2" fill="#F4D03F"/><path d="M10 8h5M10 12h4" stroke="#999" stroke-width="1.2" stroke-linecap="round"/></svg></div><div><div class="wi-ti">Game tab — device-aware curated list</div><div class="wi-de">Switch to Worlds Game Tab. Show only App-ready games that fit current device type.</div><div class="tags"><span class="tag y">P0</span><span class="tag">experience</span></div></div></div>
+          <div class="wi"><div class="wi-ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="4" width="14" height="10" rx="2" stroke="#999" stroke-width="1.5"/><path d="M5 8h8M5 11h5" stroke="#999" stroke-width="1.2" stroke-linecap="round"/><circle cx="14" cy="5" r="3" fill="#F4D03F" stroke="white" stroke-width="1"/></svg></div><div><div class="wi-ti">Create + Profile UI revamp</div><div class="wi-de">"What's New" configurable banner with in-app routing. Profile IA polish. No functional regression.</div><div class="tags"><span class="tag y">P0</span><span class="tag">experience</span></div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="notes"><div class="nlbl">Notes</div><div class="nt">Phase 1 is not glamorous but it's the prerequisite for everything else. Embedded mode and video playback are the two highest-friction issues. Fix these before the campaign loop launches in Phase 2.</div></div>
+</div>
+
+<!-- ══════════════════════════
+  5 · V1.2 PHASE 2
+══════════════════════════ -->
+<div class="slide" data-idx="5">
+  <div class="tb"><div class="brand">VIVERSE · V1.2</div><div class="vpill">Phase 2 · CC 4/30 · Released 5/7</div></div>
+  <div class="bd">
+    <div class="slide-eyebrow anim">V1.2 · Phase 2</div>
+    <div class="slide-title anim">Campaign Loop &amp; <span>Re-Entry</span></div>
+    <div class="rbox anim"><strong>⚠ Scope risk:</strong> All campaign items land 4/30 (released 5/7) with cross-system deps (App ↔ Worlds ↔ Mission backend). iOS parity scope TBD — confirm with RD + QA ASAP.</div>
+    <div class="two anim">
+      <div class="col">
+        <div class="slbl">Why this phase</div>
+        <div class="why">
+          <div class="why-body">This is the <strong>first real test</strong>: can a structured campaign with clear tasks and rewards change user behavior?</div>
+          <div class="why-pts">
+            <div class="why-pt"><span class="d">🟡</span>One-time visitors need a concrete reason to return.</div>
+            <div class="why-pt"><span class="d">🟡</span>Campaign + Mission + Push creates that structured reason.</div>
+            <div class="why-pt"><span class="d">🟡</span>BI data from here directly shapes V1.3 priorities.</div>
+            <div class="why-pt"><span class="d">🟡</span>Lightweight MVP — validate before scaling complexity.</div>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="slbl">What we're building</div>
+        <div class="what">
+          <div class="wi hi"><div class="wi-ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="3" width="14" height="12" rx="2" stroke="#111" stroke-width="1.5"/><path d="M5 7.5h8M5 10.5h5" stroke="#F4D03F" stroke-width="1.5" stroke-linecap="round"/><circle cx="14" cy="4" r="3" fill="#F4D03F" stroke="white" stroke-width="1"/></svg></div><div><div class="wi-ti">Campaign landing + 4–5 fixed missions</div><div class="wi-de">Fixed tasks: install, login ×3/7d, play game ×3/7d, watch video ×1/7d. Simple, trackable, campaign-aligned.</div><div class="tags"><span class="tag y">P0</span><span class="tag">Landing</span><span class="tag">Deep link</span></div></div></div>
+          <div class="wi hi"><div class="wi-ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="#111" stroke-width="1.5"/><path d="M9 5.5v3.5l2.5 1.5" stroke="#F4D03F" stroke-width="1.5" stroke-linecap="round"/></svg></div><div><div class="wi-ti">Mission progress UI</div><div class="wi-de">Clear completed / in-progress states. Progress synced across Push, overlay, and Landing page.</div><div class="tags"><span class="tag y">P0</span><span class="tag">retention</span></div></div></div>
+          <div class="wi"><div class="wi-ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2l1.8 3.6L15 6.3l-3 2.9.7 4.1L9 11.1 5.3 13.3l.7-4.1-3-2.9 4.2-.7L9 2z" stroke="#111" stroke-width="1.5" stroke-linejoin="round" fill="#F4D03F"/></svg></div><div><div class="wi-ti">Weekly draw + My Rewards</div><div class="wi-de">Server-side draw. Push for winners + non-winners. Public announcement + reward history page.</div><div class="tags"><span class="tag y">P0</span><span class="tag">Push</span></div></div></div>
+          <div class="wi"><div class="wi-ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2a5 5 0 015 5c0 3-2 4-2 5.5H6c0-1.5-2-2.5-2-5.5a5 5 0 015-5z" stroke="#999" stroke-width="1.5"/><path d="M7 16h4" stroke="#999" stroke-width="1.5" stroke-linecap="round"/></svg></div><div><div class="wi-ti">Push notifications — 3 triggers</div><div class="wi-de">Campaign expansion, deadline reminder, lottery result. Relevant users only. Informative tone, not pressure.</div><div class="tags"><span class="tag y">P0</span><span class="tag">Push</span></div></div></div>
+          <div class="wi"><div class="wi-ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="10" width="3" height="6" rx="1" fill="#E8E6E2"/><rect x="7" y="7" width="3" height="9" rx="1" fill="#F4D03F"/><rect x="12" y="4" width="3" height="12" rx="1" fill="#111"/></svg></div><div><div class="wi-ti">BI tracking + dashboard</div><div class="wi-de">Mission viewed, clicked, completed. Campaign join rate. Task step completion. Drop-off per step. D1/D7 impact.</div><div class="tags"><span class="tag k">data</span></div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="notes"><div class="nlbl">Notes</div><div class="nt">This is a lightweight MVP — NOT a full mission platform. No quest pools, no reroll, no daily random tasks. One goal: does a simple task-based campaign drive install, login, and short-term revisit? BI answers this.</div></div>
+</div>
+
+
+<!-- ══════════════════════════
+  6 · V1.3
+══════════════════════════ -->
+<div class="slide" data-idx="6">
+  <div class="tb"><div class="brand">VIVERSE · V1.3</div><div class="vpill">Jun 2026</div></div>
+  <div class="bd">
+    <div class="slide-eyebrow anim">V1.3 · Jun</div>
+    <div class="slide-title anim">Performance <em>P0</em> <span>+ Campaign Repeatable</span></div>
+    <div class="two anim">
+      <div class="col">
+        <div class="slbl">Why this phase</div>
+        <div class="why">
+          <div class="why-body">V1.2 fixed the UI. V1.3 fixes the <strong>feel</strong> — tab switching that takes 4–5s kills retention no matter how good the campaign is. And making campaigns repeatable stops every new campaign requiring full RD effort.</div>
+          <div class="why-pts">
+            <div class="why-pt"><span class="d">🟡</span>Benchmark: Crazy Games / Poki / YouTube load in &lt;2s. We don't.</div>
+            <div class="why-pt"><span class="d">🟡</span>Tab switching re-loads even visited pages — kills the feel of a native app.</div>
+            <div class="why-pt"><span class="d">🟡</span>Without campaign template, every campaign = full engineering sprint.</div>
+            <div class="why-pt"><span class="d">🟡</span>Widget reduces push dependency — passive visibility on home screen.</div>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="slbl">What we're building — by team</div>
+        <div class="what">
+          <div class="wi hi"><div class="wi-ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="#111" stroke-width="1.5"/><path d="M6 9l2 2 4-4" stroke="#F4D03F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div><div class="wi-ti">App Team · Instant Tab switching <span style="font-size:10px;background:#F4D03F;padding:1px 6px;border-radius:3px;margin-left:4px;font-weight:700">P0</span></div><div class="wi-de">Pre-initialize each tab's webview instance. Switching tabs shows content immediately — no re-load, &lt;0.5s. Target: single page render &lt;2s. Benchmark: Crazy Games / Poki.</div><div class="tags"><span class="tag y">App Team</span><span class="tag">performance</span></div></div></div>
+          <div class="wi hi"><div class="wi-ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 13L6 8.5L10 11L15 5" stroke="#111" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div><div class="wi-ti">Mission · Campaign template system <span style="font-size:10px;background:#F4D03F;padding:1px 6px;border-radius:3px;margin-left:4px;font-weight:700">P0</span></div><div class="wi-de">Tasks, timing, reward type, entry points all configurable. Ops launches Campaign 2 without custom engineering. Drop-off fix from V1.2 BI data.</div><div class="tags"><span class="tag y">Mission</span><span class="tag">scalability</span></div></div></div>
+          <div class="wi hi"><div class="wi-ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="3" width="14" height="12" rx="3" stroke="#111" stroke-width="1.5"/><rect x="5" y="8" width="8" height="4" rx="1.5" fill="#F4D03F"/></svg></div><div><div class="wi-ti">App Team · Campaign-linked Widget (iOS + Android) <span style="font-size:10px;background:#F4D03F;padding:1px 6px;border-radius:3px;margin-left:4px;font-weight:700">P0</span></div><div class="wi-de">Home screen widget: campaign progress + 1-tap deep link to campaign landing. Deadline reminder state when &lt;48h left. Widget add flow in-app.</div><div class="tags"><span class="tag y">App Team</span><span class="tag">Widget</span></div></div></div>
+          <div class="wi"><div class="wi-ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="2" width="14" height="14" rx="2" stroke="#999" stroke-width="1.5"/><rect x="4" y="7" width="4" height="7" rx="1" fill="#E8E6E2"/><rect x="10" y="4" width="4" height="10" rx="1" fill="#F4D03F" opacity=".5"/></svg></div><div><div class="wi-ti">Worlds · Mobile view — first batch fixes</div><div class="wi-de">Worlds is a webpage with RWD. Mobile view has many issues: wrong display counts, layout problems, oversized elements. First batch of fixes starts here.</div><div class="tags"><span class="tag">Worlds</span><span class="tag">mobile UX</span></div></div></div>
+          <div class="wi"><div class="wi-ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2l1.6 3.3 3.4.5-2.5 2.4.6 3.3-3.1-1.6-3.1 1.6.6-3.3-2.5-2.4 3.4-.5L9 2z" fill="#F4D03F" stroke="#111" stroke-width="1.2" stroke-linejoin="round"/></svg></div><div><div class="wi-ti">Mission · Reward format variants</div><div class="wi-de">Test multi-entry (more tasks = more draw chances) against V1.2 completion baseline. Which structure has the lowest drop-off?</div><div class="tags"><span class="tag">Mission</span><span class="tag">reward testing</span></div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="notes"><div class="nlbl">Notes</div><div class="nt">Instant Tab switching is P0 because no campaign or mission can fix retention if the app feels slow. Performance is a prerequisite for everything else. Campaign template makes V1.4+ campaigns much cheaper. See next two slides for Campaign and Widget detail.</div></div>
+</div>
+
+<!-- ══════════════════════════
+  7 · V1.3 DETAIL: CAMPAIGN
+══════════════════════════ -->
+<div class="slide" data-idx="7">
+  <div class="tb"><div class="brand">VIVERSE · V1.3 Detail</div><div class="vpill">Campaign Evolution</div></div>
+  <div class="bd">
+    <div class="slide-eyebrow anim">V1.3 · Campaign detail</div>
+    <div class="slide-title anim">Campaign <span>evolution paths</span></div>
+    <div class="two anim">
+      <div class="col">
+        <div class="slbl">Why different campaign types</div>
+        <div class="why">
+          <div class="why-body">V1.2's "complete all tasks" model is a baseline. V1.3 tests <strong>which structure drives the least drop-off</strong> and best completion rate.</div>
+          <div class="why-pts">
+            <div class="why-pt"><span class="d">🟡</span>All-or-nothing design has the highest drop-off risk.</div>
+            <div class="why-pt"><span class="d">🟡</span>Multi-entry: more tasks = more chances = less abandonment mid-way.</div>
+            <div class="why-pt"><span class="d">🟡</span>Tier model gives partial reward — no one leaves empty-handed.</div>
+            <div class="why-pt"><span class="d">🟡</span>Stamp type feels like discovery, not a homework checklist.</div>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="slbl">Campaign types to build and test</div>
+        <div class="what">
+          <div class="wi hi">
+            <div class="wi-ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 13L6 8.5L10 11L15 5" stroke="#111" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 5h3v3" stroke="#111" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+            <div><div class="wi-ti">Completion type <span style="font-size:11px;font-weight:500;color:var(--g)">— V1.2 baseline</span></div><div class="wi-de">Do all tasks → earn draw entry. Simple and clear. High drop-off risk — all or nothing. This is the benchmark to beat.</div><div class="tags"><span class="tag y">V1.2 model</span><span class="tag">baseline</span></div></div>
+          </div>
+          <div class="wi hi">
+            <div class="wi-ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2l1.6 3.2L14.5 6l-2.7 2.6.6 3.7L9 10.5l-3.4 1.8.6-3.7L3.5 6l3.9-.6L9 2z" fill="#F4D03F" stroke="#111" stroke-width="1.2" stroke-linejoin="round"/></svg></div>
+            <div><div class="wi-ti">Multi-entry type <span style="font-size:11px;font-weight:500;color:var(--g)">— V1.3 recommended test</span></div><div class="wi-de">More tasks = more draw entries. Login = 1 entry, play 3 games = +1, watch video = +1. Reduces all-or-nothing abandonment.</div><div class="tags"><span class="tag y">Test in V1.3</span><span class="tag">lower drop-off</span></div></div>
+          </div>
+          <div class="wi">
+            <div class="wi-ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="12" width="3" height="4" rx="1" fill="#F4D03F"/><rect x="7" y="9" width="3" height="7" rx="1" fill="#F4D03F" opacity=".7"/><rect x="12" y="6" width="3" height="10" rx="1" fill="#111"/></svg></div>
+            <div><div class="wi-ti">Tier / Milestone type</div><div class="wi-de">Bronze (2 tasks) / Silver (4 tasks) / Gold + draw (all tasks). No one leaves empty-handed. Reduces mid-funnel drop-off.</div><div class="tags"><span class="tag">Test in V1.4</span></div></div>
+          </div>
+          <div class="wi">
+            <div class="wi-ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="3" y="3" width="5" height="5" rx="1" fill="#F4D03F"/><rect x="10" y="3" width="5" height="5" rx="1" fill="#F4D03F" opacity=".4"/><rect x="3" y="10" width="5" height="5" rx="1" fill="#F4D03F" opacity=".4"/><rect x="10" y="10" width="5" height="5" rx="1" fill="#F4D03F" opacity=".2"/></svg></div>
+            <div><div class="wi-ti">Stamp / Explore type</div><div class="wi-de">Try 1 game + Watch 1 video + Visit 1 World = collect all stamps → draw entry. Feels like platform discovery, not a task list.</div><div class="tags"><span class="tag">Test in V1.4</span><span class="tag">content discovery</span></div></div>
+          </div>
+          <div class="wi">
+            <div class="wi-ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="6.5" cy="9" r="4" stroke="#999" stroke-width="1.5"/><circle cx="12" cy="9" r="4" stroke="#999" stroke-width="1.5"/></svg></div>
+            <div><div class="wi-ti">New user vs Return user split</div><div class="wi-de">New: login + 1 game + 1 video. Return: 3 logins + 3 games. Different task difficulty, same campaign shell. Better conversion for both segments.</div><div class="tags"><span class="tag">V1.4 priority</span><span class="tag">segmentation</span></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="notes"><div class="nlbl">Notes</div><div class="nt">Don't build all types at once. V1.3 tests Multi-entry against V1.2 baseline. V1.4 adds Stamp / Explore and segmentation. Key question: which structure has lowest drop-off and highest completion rate?</div></div>
+</div>
+
+<!-- ══════════════════════════
+  8 · V1.3 DETAIL: WIDGET
+══════════════════════════ -->
+<div class="slide" data-idx="8">
+  <div class="tb"><div class="brand">VIVERSE · V1.3 Detail</div><div class="vpill">Campaign Widget</div></div>
+  <div class="bd">
+    <div class="slide-eyebrow anim">V1.3 · Widget detail</div>
+    <div class="slide-title anim">Campaign <em>Widget</em> <span>— home screen re-entry</span></div>
+    <div class="two anim">
+      <div class="col">
+        <div class="slbl">Why widget over push</div>
+        <div class="why">
+          <div class="why-body">Push notifications get ignored, turned off, or blocked over time. Widget <strong>stays on the home screen permanently</strong> — users see it every time they unlock their phone, with zero friction.</div>
+          <div class="why-pts">
+            <div class="why-pt"><span class="d">🟡</span>Passive visibility — no notification fatigue, no opt-out risk.</div>
+            <div class="why-pt"><span class="d">🟡</span>Campaign progress visible without opening the app.</div>
+            <div class="why-pt"><span class="d">🟡</span>1-tap entry direct to campaign landing — no extra navigation.</div>
+            <div class="why-pt"><span class="d">🟡</span>US users are highly familiar with widgets on both iOS + Android.</div>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="slbl">Widget spec — App Team</div>
+        <div class="what">
+          <div class="wi hi"><div class="wi-ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="3" width="14" height="12" rx="3" stroke="#111" stroke-width="1.5"/><path d="M5 9h8" stroke="#F4D03F" stroke-width="2" stroke-linecap="round"/><path d="M5 6.5h5" stroke="#E8E6E2" stroke-width="1.5" stroke-linecap="round"/><path d="M5 11.5h3" stroke="#E8E6E2" stroke-width="1.5" stroke-linecap="round"/></svg></div><div><div class="wi-ti">Campaign progress display</div><div class="wi-de">Shows current campaign name + X/Y tasks completed. Progress bar updates in real-time. Both iOS (WidgetKit) and Android (App Widget) supported.</div><div class="tags"><span class="tag y">P0</span><span class="tag">iOS + Android</span></div></div></div>
+          <div class="wi hi"><div class="wi-ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="#111" stroke-width="1.5"/><path d="M6 9l2 2 4-4" stroke="#F4D03F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div><div class="wi-ti">1-tap deep link to campaign</div><div class="wi-de">Tapping widget routes directly to campaign landing page with correct campaign context. No extra steps or home screen navigation.</div><div class="tags"><span class="tag y">P0</span><span class="tag">Deep link</span></div></div></div>
+          <div class="wi"><div class="wi-ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2a5 5 0 015 5c0 3-2 4-2 5.5H6c0-1.5-2-2.5-2-5.5a5 5 0 015-5z" stroke="#999" stroke-width="1.5"/><path d="M7 16h4" stroke="#999" stroke-width="1.5" stroke-linecap="round"/><circle cx="9" cy="10.5" r="1.5" fill="#F4D03F"/></svg></div><div><div class="wi-ti">Deadline reminder state</div><div class="wi-de">Widget shows urgency indicator when campaign ends in &lt;48h. Visual state change only — not a push. Respects user attention without interrupting.</div><div class="tags"><span class="tag">campaign-aware</span></div></div></div>
+          <div class="wi"><div class="wi-ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2l1.6 3.3 3.4.5-2.5 2.4.6 3.3-3.1-1.6-3.1 1.6.6-3.3-2.5-2.4 3.4-.5L9 2z" fill="#F4D03F" stroke="#111" stroke-width="1.2" stroke-linejoin="round"/></svg></div><div><div class="wi-ti">Draw entry status</div><div class="wi-de">When user qualifies for draw: widget shows "You're entered!" state. Positive reinforcement visible on home screen every day.</div><div class="tags"><span class="tag">reward signal</span></div></div></div>
+          <div class="wi"><div class="wi-ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="2" width="14" height="14" rx="3" stroke="#999" stroke-width="1.5"/><path d="M6 9h6M6 6h6M6 12h4" stroke="#999" stroke-width="1.2" stroke-linecap="round"/></svg></div><div><div class="wi-ti">Widget add flow (in-app CTA)</div><div class="wi-de">After joining campaign: prompt to add widget with step-by-step guide for iOS and Android. Shown once, not repeated. Maximizes widget adoption rate.</div><div class="tags"><span class="tag">onboarding</span></div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="notes"><div class="nlbl">Notes</div><div class="nt">This widget is campaign-specific — tied to the running campaign, only valuable when a campaign is live. The general mission widget (always-on, not campaign-dependent) comes in V1.5. Don't conflate the two different widgets.</div></div>
+</div>
+
+<!-- ══════════════════════════
+  9 · V1.4
+══════════════════════════ -->
+<div class="slide" data-idx="9">
+  <div class="tb"><div class="brand">VIVERSE · V1.4</div><div class="vpill">Jul 2026</div></div>
+  <div class="bd">
+    <div class="slide-eyebrow anim">V1.4 · July</div>
+    <div class="slide-title anim">Mobile Experience <em>Standard</em> <span>+ Campaign Segmented</span></div>
+    <div class="two anim">
+      <div class="col">
+        <div class="slbl">Why this phase</div>
+        <div class="why">
+          <div class="why-body">Good mobile experience is the <strong>prerequisite for App-only value</strong>. Even the best App-only games fail if the mobile interaction feel is poor. Fix the foundation before adding exclusives.</div>
+          <div class="why-pts">
+            <div class="why-pt"><span class="d">🟡</span>Most games are desktop-first imports — mobile UX is an afterthought.</div>
+            <div class="why-pt"><span class="d">🟡</span>Touch controls, screen fit, and session length all need mobile-first thinking.</div>
+            <div class="why-pt"><span class="d">🟡</span>Campaign segmentation: same campaign for new + return users is inefficient.</div>
+            <div class="why-pt"><span class="d">🟡</span>Worlds mobile view still has many layout issues — continued fix needed.</div>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="slbl">What we're building — by team</div>
+        <div class="what">
+          <div class="wi hi"><div class="wi-ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="5" y="1" width="8" height="16" rx="2" stroke="#111" stroke-width="1.5"/><circle cx="9" cy="14" r="1" fill="#F4D03F"/><path d="M7 4h4" stroke="#F4D03F" stroke-width="1.5" stroke-linecap="round"/></svg></div><div><div class="wi-ti">App Team · Mobile-first game experience standard</div><div class="wi-de">Evaluate all current games for mobile fit: touch control quality, screen resolution, session length suitability. Define and publish internal mobile-ready standard. Prioritize top 10 games for improvement.</div><div class="tags"><span class="tag y">App Team</span><span class="tag">mobile UX</span></div></div></div>
+          <div class="wi hi"><div class="wi-ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="6.5" cy="9" r="4" stroke="#111" stroke-width="1.5"/><circle cx="12" cy="9" r="4" stroke="#111" stroke-width="1.5"/></svg></div><div><div class="wi-ti">Mission · New user vs return user campaigns</div><div class="wi-de">Separate task difficulty by segment. New user: login + 1 game + 1 video. Return user: 3 logins + 3 games + deeper engagement. Better conversion for both.</div><div class="tags"><span class="tag y">Mission</span><span class="tag">segmentation</span></div></div></div>
+          <div class="wi hi"><div class="wi-ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="3" y="3" width="5" height="5" rx="1" fill="#F4D03F"/><rect x="10" y="3" width="5" height="5" rx="1" fill="#F4D03F" opacity=".4"/><rect x="3" y="10" width="5" height="5" rx="1" fill="#F4D03F" opacity=".4"/><rect x="10" y="10" width="5" height="5" rx="1" fill="#F4D03F" opacity=".2"/></svg></div><div><div class="wi-ti">Mission · Stamp / Explore mechanic</div><div class="wi-de">Try 1 game + Watch 1 video + Visit 1 World = collect all stamps → enter draw. Feels like exploration, not obligation. Tests content discovery as campaign driver.</div><div class="tags"><span class="tag y">Mission</span><span class="tag">discovery</span></div></div></div>
+          <div class="wi"><div class="wi-ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="2" width="14" height="14" rx="2" stroke="#999" stroke-width="1.5"/><rect x="4" y="7" width="4" height="7" rx="1" fill="#E8E6E2"/><rect x="10" y="4" width="4" height="10" rx="1" fill="#F4D03F" opacity=".5"/></svg></div><div><div class="wi-ti">Worlds · Mobile view — continued fixes</div><div class="wi-de">Second batch: fix remaining layout issues identified in V1.3. Content display density, card sizing, navigation behavior on mobile all reviewed and corrected.</div><div class="tags"><span class="tag">Worlds</span><span class="tag">mobile UX</span></div></div></div>
+          <div class="wi"><div class="wi-ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="10" width="3" height="5" rx="1" fill="#F4D03F"/><rect x="7" y="7" width="3" height="8" rx="1" fill="#F4D03F" opacity=".6"/><rect x="12" y="4" width="3" height="11" rx="1" fill="#111"/></svg></div><div><div class="wi-ti">Mission · Tier reward structure</div><div class="wi-de">Bronze / Silver / Gold reward tiers. Test against multi-entry from V1.3. Data decides which model becomes the default for future campaigns.</div><div class="tags"><span class="tag">Mission</span><span class="tag">reward testing</span></div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="notes"><div class="nlbl">Notes</div><div class="nt">Mobile experience standard is strategic groundwork — it defines what "good" means for VIVERSE on mobile. This informs both game content decisions and future App-only feature priorities. Campaign segmentation built here also becomes the foundation for Mission personalization in V1.5+.</div></div>
+</div>
+
+<!-- ══════════════════════════
+  10 · V1.5
+══════════════════════════ -->
+<div class="slide" data-idx="10">
+  <div class="tb"><div class="brand">VIVERSE · V1.5</div><div class="vpill">Aug 2026</div></div>
+  <div class="bd">
+    <div class="slide-eyebrow anim">V1.5 · August</div>
+    <div class="slide-title anim">Mission <em>Always-on</em> <span>+ Public Gallery Foundation</span></div>
+    <div class="two anim">
+      <div class="col">
+        <div class="slbl">Why this phase</div>
+        <div class="why">
+          <div class="why-body">Campaign trains users. <strong>Mission keeps them without needing a campaign</strong>. And Public Gallery needs content before social features can work — so the publish flow comes first.</div>
+          <div class="why-pts">
+            <div class="why-pt"><span class="d">🟡</span>Campaign ends → no always-on reason to return. Mission fills this gap.</div>
+            <div class="why-pt"><span class="d">🟡</span>No-FOMO: additive bonus, not punishment — keeps platform feel positive.</div>
+            <div class="why-pt"><span class="d">🟡</span>Public Gallery: need content (publish flow) before social layer can work.</div>
+            <div class="why-pt"><span class="d">🟡</span>Gallery without content is empty — sequence matters: publish first, then social.</div>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="slbl">What we're building — by team</div>
+        <div class="what">
+          <div class="wi hi"><div class="wi-ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="3" width="14" height="12" rx="2.5" stroke="#111" stroke-width="1.5"/><path d="M5 8h8M5 11h5" stroke="#F4D03F" stroke-width="1.5" stroke-linecap="round"/></svg></div><div><div class="wi-ti">Mission · Weekly mission system (No-FOMO)</div><div class="wi-de">3 simple tasks per week, informed by campaign behavior data. No expiry penalty, no streak loss. Reward: Points or badge. Always-on without needing a campaign live.</div><div class="tags"><span class="tag y">Mission</span><span class="tag">retention</span><span class="tag">No-FOMO</span></div></div></div>
+          <div class="wi hi"><div class="wi-ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="7" width="14" height="9" rx="2" stroke="#111" stroke-width="1.5"/><path d="M6 7V5a3 3 0 016 0v2" stroke="#111" stroke-width="1.5"/><rect x="7" y="10" width="4" height="3" rx="1" fill="#F4D03F"/></svg></div><div><div class="wi-ti">App Team · Mission Widget — always-on</div><div class="wi-de">Separate from V1.3 campaign widget. Shows this week's mission task count + progress. Persistent re-entry surface even when no campaign is live.</div><div class="tags"><span class="tag y">App Team</span><span class="tag">Widget</span></div></div></div>
+          <div class="wi hi"><div class="wi-ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4 12l5-5m0 0l4-4m-4 4l1.5 1.5M13 4l1.5-1.5" stroke="#111" stroke-width="1.5" stroke-linecap="round"/><circle cx="14" cy="4" r="2.5" fill="#F4D03F"/></svg></div><div><div class="wi-ti">Worlds · Object AI → Public Gallery (publish)</div><div class="wi-de">User changes 3D asset from private → public. Basic confirmation + status. This is the supply side — content must exist before V1.6 social features make sense.</div><div class="tags"><span class="tag y">Worlds</span><span class="tag">UGC</span></div></div></div>
+          <div class="wi"><div class="wi-ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="4" width="14" height="11" rx="2" stroke="#999" stroke-width="1.5"/><rect x="4" y="7" width="4" height="4" rx="1" fill="#F4D03F" opacity=".6"/><rect x="10" y="7" width="4" height="4" rx="1" fill="#F4D03F" opacity=".4"/><path d="M4 13h10" stroke="#999" stroke-width="1" stroke-linecap="round"/></svg></div><div><div class="wi-ti">Worlds · Public Gallery browse page</div><div class="wi-de">First public 3D creator gallery. Users browse Object AI works. Social proof for creators, inspires new creation. Demand side — viewers discover content.</div><div class="tags"><span class="tag">Worlds</span><span class="tag">UGC</span></div></div></div>
+          <div class="wi"><div class="wi-ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="5" y="1" width="8" height="16" rx="2" stroke="#999" stroke-width="1.5"/><path d="M7 5h4M7 8h3M7 11h2" stroke="#F4D03F" stroke-width="1.2" stroke-linecap="round"/></svg></div><div><div class="wi-ti">App Team · Continued performance optimization</div><div class="wi-de">Ongoing: track page render times, address remaining slow-load cases from V1.3 Instant Tool rollout. Establish performance monitoring dashboard.</div><div class="tags"><span class="tag">App Team</span><span class="tag">performance</span></div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="notes"><div class="nlbl">Notes</div><div class="nt">Public Gallery sequence is intentional: publish flow (supply) → browse page (demand) → follow/like (social, V1.6) → UGC Campaign (V1.6). Don't skip. A gallery without content is useless. Social without content to react to is also useless.</div></div>
+</div>
+
+<!-- ══════════════════════════
+  11 · V1.6
+══════════════════════════ -->
+<div class="slide" data-idx="11">
+  <div class="tb"><div class="brand">VIVERSE · V1.6</div><div class="vpill">Sep 2026</div></div>
+  <div class="bd">
+    <div class="slide-eyebrow anim">V1.6 · September</div>
+    <div class="slide-title anim">Public Gallery <em>Social</em> <span>+ IAP Foundation</span></div>
+    <div class="two anim">
+      <div class="col">
+        <div class="slbl">Why this phase</div>
+        <div class="why">
+          <div class="why-body">V1.5 created the gallery with content. V1.6 makes it <strong>social</strong> — and that's when UGC campaigns finally work, because now there's both content and an audience.</div>
+          <div class="why-pts">
+            <div class="why-pt"><span class="d">🟡</span>Gallery without social is static — no reason to return after first visit.</div>
+            <div class="why-pt"><span class="d">🟡</span>Follow + Like gives creators motivation to keep making and publishing.</div>
+            <div class="why-pt"><span class="d">🟡</span>UGC Campaign needs creators (to submit) and viewers (to vote) — both exist now.</div>
+            <div class="why-pt"><span class="d">🟡</span>Habit established over 5 months — users with habits are far more likely to pay.</div>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="slbl">What we're building — by team</div>
+        <div class="what">
+          <div class="wi hi"><div class="wi-ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="7" cy="7" r="3" stroke="#111" stroke-width="1.5"/><path d="M12 5l2-2M14 7h2M12 9l2 2" stroke="#F4D03F" stroke-width="1.5" stroke-linecap="round"/><path d="M2 15c0-2.2 2-4 5-4s5 1.8 5 4" stroke="#111" stroke-width="1.5" stroke-linecap="round"/></svg></div><div><div class="wi-ti">Worlds · Public Gallery — follow + like</div><div class="wi-de">Users follow creators and like 3D works. Lightweight App social entry point — no separate social system needed. Follow from gallery = App's social foundation.</div><div class="tags"><span class="tag y">Worlds</span><span class="tag">social</span></div></div></div>
+          <div class="wi hi"><div class="wi-ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2l1.8 3.6L15 6.3l-3 2.9.7 4.1L9 11.1 5.3 13.3l.7-4.1-3-2.9 4.2-.7L9 2z" fill="#F4D03F" stroke="#111" stroke-width="1.5" stroke-linejoin="round"/></svg></div><div><div class="wi-ti">Worlds · 3D Creation Challenge — UGC Campaign</div><div class="wi-de">Submit Object AI creation → community votes → top creators win. Multiple revisit triggers: submit, vote, check results. Moderation ops required — plan ahead.</div><div class="tags"><span class="tag y">Worlds</span><span class="tag">UGC campaign</span></div></div></div>
+          <div class="wi hi"><div class="wi-ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4 12l5-5m0 0 4-4m-4 4 1.5 1.5M13 3l1.5-1.5" stroke="#111" stroke-width="1.5" stroke-linecap="round"/><circle cx="14" cy="3" r="2.5" fill="#F4D03F"/></svg></div><div><div class="wi-ti">App Team · Object AI social share</div><div class="wi-de">1-tap share to Instagram / X / TikTok. Share card: VIVERSE brand + deep link back to Public Gallery. First organic viral growth loop from user creations.</div><div class="tags"><span class="tag y">App Team</span><span class="tag">viral growth</span></div></div></div>
+          <div class="wi"><div class="wi-ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="6" width="14" height="10" rx="2" stroke="#999" stroke-width="1.5"/><path d="M6 6V5a3 3 0 016 0v1" stroke="#999" stroke-width="1.5"/><circle cx="9" cy="11" r="2" fill="#F4D03F"/></svg></div><div><div class="wi-ti">App Team · IAP architecture foundation</div><div class="wi-de">Define product: Points purchase / Premium content unlock. Visual placeholder in Profile. Points system built for V1.7 fast launch — no rearchitecting needed next version.</div><div class="tags"><span class="tag">App Team</span><span class="tag">IAP prep</span></div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="notes"><div class="nlbl">Notes</div><div class="nt">Public Gallery → Follow/Like → UGC Campaign is one connected sequence. Don't reorder. UGC Campaign needs moderation ops — plan content review process before launch. IAP architecture here means V1.7 is a fast follow build, not a major engineering effort.</div></div>
+</div>
+
+<!-- ══════════════════════════
+  12 · V1.7
+══════════════════════════ -->
+<div class="slide" data-idx="12">
+  <div class="tb"><div class="brand">VIVERSE · V1.7</div><div class="vpill">Oct 2026</div></div>
+  <div class="bd">
+    <div class="slide-eyebrow anim">V1.7 · October</div>
+    <div class="slide-title anim">IAP <em>Live</em> <span>+ Video Creation</span></div>
+    <div class="two anim">
+      <div class="col">
+        <div class="slbl">Why this phase</div>
+        <div class="why">
+          <div class="why-body">IAP only works when users <strong>trust the platform and have a reason to invest</strong>. By Oct, 6 months of campaigns and missions have built that trust. Launching IAP earlier would convert poorly.</div>
+          <div class="why-pts">
+            <div class="why-pt"><span class="d">🟡</span>6 months of campaigns have built trust and repeat visit habit.</div>
+            <div class="why-pt"><span class="d">🟡</span>Users with formed habits are 5–10x more likely to pay than new users.</div>
+            <div class="why-pt"><span class="d">🟡</span>Video clip creation is the next UGC frontier — game clips are viral content.</div>
+            <div class="why-pt"><span class="d">🟡</span>IAP architecture from V1.6 means this is a fast follow, not a major build.</div>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="slbl">What we're building — by team</div>
+        <div class="what">
+          <div class="wi hi"><div class="wi-ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="6" width="14" height="10" rx="2" stroke="#111" stroke-width="1.5"/><path d="M6 6V5a3 3 0 016 0v1" stroke="#111" stroke-width="1.5"/><path d="M7 11l2 2 2-2" stroke="#F4D03F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div><div class="wi-ti">App Team · IAP live — Points purchase</div><div class="wi-de">Users buy VIVERSE Points directly. Points used for: premium content unlock, cosmetics, campaign advantages. App Store + Google Play compliant. Conversion expected low initially — that's normal.</div><div class="tags"><span class="tag y">App Team</span><span class="tag">revenue</span></div></div></div>
+          <div class="wi hi"><div class="wi-ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="#111" stroke-width="1.5"/><path d="M7 6.5l5 2.5-5 2.5V6.5Z" fill="#F4D03F"/></svg></div><div><div class="wi-ti">App Team · Video clip creation tool</div><div class="wi-de">Record gameplay in-app → trim → add text overlay → export + share. Users create short clips of game moments. Viral loop: clips drive external reach back to VIVERSE.</div><div class="tags"><span class="tag y">App Team</span><span class="tag">UGC</span><span class="tag">viral</span></div></div></div>
+          <div class="wi"><div class="wi-ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2l1.8 3.6L15 6.3l-3 2.9.7 4.1L9 11.1 5.3 13.3l.7-4.1-3-2.9 4.2-.7L9 2z" stroke="#999" stroke-width="1.5" stroke-linejoin="round"/></svg></div><div><div class="wi-ti">Mission · First video-based campaign</div><div class="wi-de">Best gameplay clip contest: upload → community votes → winners announced. Video share drives organic reach outside VIVERSE. UGC flywheel completes.</div><div class="tags"><span class="tag">Mission</span><span class="tag">video campaign</span></div></div></div>
+          <div class="wi"><div class="wi-ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="4" width="14" height="11" rx="2" stroke="#999" stroke-width="1.5"/><rect x="5" y="7" width="3" height="4" rx="1" fill="#F4D03F"/><rect x="10" y="7" width="5" height="2" rx="1" fill="#E8E6E2"/><rect x="10" y="10" width="3" height="1" rx=".5" fill="#E8E6E2"/></svg></div><div><div class="wi-ti">App Team · Premium content unlock</div><div class="wi-de">Points unlock exclusive worlds, creator content, or premium game modes. First monetizable content layer. What users pay for informs future IAP product design.</div><div class="tags"><span class="tag">App Team</span><span class="tag">premium</span></div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="notes"><div class="nlbl">Notes</div><div class="nt">V1.7 is where the business model starts. IAP conversion will be low at first — that's expected and normal. The goal is to establish the purchase flow, learn what users will pay for, and then optimize. Don't over-engineer IAP in this version.</div></div>
+</div>
+</div><!-- end deck -->
+
+<!-- ── BOTTOM NAV ── -->
+<div class="nav">
+  <div class="ntabs" id="ntabs">
+    <button class="ntab active">Cover</button>
+    <button class="ntab">Overview</button>
+    <button class="ntab">Strategy</button>
+    <button class="ntab">Timeline</button>
+    <button class="ntab">V1.2 P1</button>
+    <button class="ntab">V1.2 P2</button>
+    <button class="ntab">V1.3</button>
+    <button class="ntab">V1.3 Campaign</button>
+    <button class="ntab">V1.3 Widget</button>
+    <button class="ntab">V1.4</button>
+    <button class="ntab">V1.5</button>
+    <button class="ntab">V1.6</button>
+    <button class="ntab">V1.7</button>
+  </div>
+  <div class="nright">
+    <span class="nctr" id="nctr">1 / 13</span>
+    <button class="abtn" id="prev" disabled><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 2L4 6l4 4"/></svg></button>
+    <button class="abtn" id="next"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 2l4 4-4 4"/></svg></button>
+  </div>
+  <div class="kbd">← → keys</div>
+</div>
+
+<script>
+const slides=document.querySelectorAll('.slide');
+const tabs=document.querySelectorAll('.ntab');
+const prev=document.getElementById('prev');
+const next=document.getElementById('next');
+const ctr=document.getElementById('nctr');
+const pb=document.getElementById('pbar');
+const total=slides.length;
+let cur=0,animating=false;
+const visited=new Set([0]); // track which slides have been animated
+
+// play entry animation only on first visit
+function playEntrance(slide){
+  slide.classList.remove('playing');
+  // force reflow so animation restarts cleanly
+  void slide.offsetWidth;
+  slide.classList.add('playing');
+  setTimeout(()=>slide.classList.remove('playing'), 800);
+}
+
+function go(i){
+  if(i<0||i>=total||animating)return;
+  animating=true;
+  const dir=i>cur?1:-1;
+  const outClass=dir>0?'exit-right':'exit-left';
+  const inClass=dir>0?'enter-right':'enter-left';
+
+  // exit current
+  slides[cur].classList.remove('active');
+  slides[cur].classList.add(outClass);
+  const exitSlide=slides[cur];
+  setTimeout(()=>exitSlide.classList.remove(outClass),380);
+
+  cur=i;
+
+  // enter new
+  slides[cur].classList.add('active',inClass);
+  setTimeout(()=>{
+    slides[cur].classList.remove(inClass);
+    animating=false;
+  },380);
+
+  // play stagger animation only on first visit
+  if(!visited.has(i)){
+    visited.add(i);
+    playEntrance(slides[cur]);
+  }
+
+  tabs.forEach((t,j)=>t.classList.toggle('active',j===cur));
+  ctr.textContent=(cur+1)+' / '+total;
+  prev.disabled=cur===0;
+  next.disabled=cur===total-1;
+  pb.style.width=((cur+1)/total*100)+'%';
+}
+
+// play entrance for slide 0 on load
+setTimeout(()=>playEntrance(slides[0]), 100);
+
+tabs.forEach((t,i)=>t.addEventListener('click',()=>go(i)));
+prev.addEventListener('click',()=>go(cur-1));
+next.addEventListener('click',()=>go(cur+1));
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key==='ArrowDown')go(cur+1);
+  if(e.key==='ArrowLeft'||e.key==='ArrowUp')go(cur-1);
+});
+</script>
+</body>
+</html>
